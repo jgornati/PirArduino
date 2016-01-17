@@ -34,9 +34,41 @@ union ArrayToIp {
 ArrayToIp server = { 244, 126, 43, 179 };// servidor gornatilabs.com - > 179.43.126.244
 cc3000_PubSubClient mqttclient(server.ip, 1883, callback, client, WiDo);
 
+int detect = 0;
+
+void ISR_interrupcion() {
+  detect = 1;
+}
+
 void setup() {
 
   Serial.begin(115200);
+  configuro_wifi();
+  attachInterrupt(1, ISR_interrupcion, RISING); //configuro la interrupcion 1 pata 2 arduino leonardo cuando hay flanco positivo
+
+
+
+}
+
+void loop() {
+
+  if (detect == 1) {
+    mqttclient.publish("sen1", "25");
+    Serial.println("Detecte movimiento...");
+    detect = 0;
+  }
+
+
+
+
+
+  mqttclient.loop();
+
+
+}
+
+
+void configuro_wifi() {
   Serial.println(F("Hello, CC3000!\n"));
 
   /* Initialise the module */
@@ -91,61 +123,25 @@ void setup() {
   } else {
     Serial.println(F("No se conecto al Broker"));
   }
-
 }
-  float h = 0;
-  float t = 0;
-  int i;
-
-void loop() {
-  unsigned long time = millis();
-
-
-  t = t + 25;
-  h = h + 80;
-  i++;
-  
-  if ((mqttOK) && (time - lastTime >= 30000)) {
-    t = t / i;
-    h = h / i;
-    i = 0;
-    Serial.println("Sending data...");
-
-    char charVal[10];               //temporarily holds data from vals
-
-    //temperature
-    dtostrf(t, 4, 2, charVal);  //4 is mininum width, 4 is precision; float value is copied onto buff
-    mqttclient.publish("t1", charVal);
-    //humidity
-    dtostrf(h, 4, 2, charVal);  //4 is mininum width, 4 is precision; float value is copied onto buff
-    mqttclient.publish("h1", charVal);
-
-    lastTime = time;
-  }
-
-  mqttclient.loop();
-
-
-}
-
 
 void callback (char* topic, byte* payload, unsigned int length) {
 
-//  // As long as length isn't too big, we can add a null to the payload:
-//  payload[length] = '\0';
-//  String strPayload = String((char*)payload);
-//
-//  // Allocate the correct amount of memory for the payload copy
-//  byte* p = (byte*)malloc(length);
-//  // Copy the payload to the new buffer
-//  memcpy(p, payload, length);
-//
-//  //if (length == 4 && (strncmp((const char *)payload, "HOLA",4)==0)) { //otra forma de comparar
-//  if (strPayload == "HOLA\0") {
-//    Serial.println("HOLA DETECTED!");
-//  }
-//  // Free the memory
-//  free(p);
+  //  // As long as length isn't too big, we can add a null to the payload:
+  //  payload[length] = '\0';
+  //  String strPayload = String((char*)payload);
+  //
+  //  // Allocate the correct amount of memory for the payload copy
+  //  byte* p = (byte*)malloc(length);
+  //  // Copy the payload to the new buffer
+  //  memcpy(p, payload, length);
+  //
+  //  //if (length == 4 && (strncmp((const char *)payload, "HOLA",4)==0)) { //otra forma de comparar
+  //  if (strPayload == "HOLA\0") {
+  //    Serial.println("HOLA DETECTED!");
+  //  }
+  //  // Free the memory
+  //  free(p);
 }
 
 
