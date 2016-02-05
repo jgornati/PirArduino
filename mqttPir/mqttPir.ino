@@ -44,24 +44,35 @@ void setup() {
 
   Serial.begin(115200);
   configuro_wifi();
+  pinMode(13, OUTPUT);
   attachInterrupt(1, ISR_interrupcion, RISING); //configuro la interrupcion 1 pata 2 arduino leonardo cuando hay flanco positivo
 
 
 
 }
-
+int batVal;
+char batValChar[4];
 void loop() {
+  unsigned long time = millis();
 
   if (detect == 1) {
     mqttclient.publish("sen1", "25");
     Serial.println("Detecte movimiento...");
     detect = 0;
+    digitalWrite(13, HIGH);
   }
+  delay(15);
+  digitalWrite(13, LOW);
+  if ((mqttOK) && (time - lastTime >= 15000)) {
+    batVal = analogRead(0);
+    dtostrf(batVal, 4, 0, batValChar);
+    mqttclient.publish("bat", batValChar);
+    Serial.print("La Bateria es: ");
+    Serial.println(batValChar);
 
 
-
-
-
+    lastTime = time;
+  }
   mqttclient.loop();
 
 
